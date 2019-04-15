@@ -1,0 +1,10 @@
+#文件夹
+__pycache__
+.vscode
+
+#单个文件
+/demo.py
+
+#通配文件
+*.r
+#/models/*
