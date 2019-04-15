@@ -2,6 +2,7 @@
 __pycache__
 .vscode
 models
+output
 
 #单文件
 /src/demo.py

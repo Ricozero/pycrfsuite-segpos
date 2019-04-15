@@ -22,6 +22,7 @@ def read_raw_file(filename):
         for char in sent:
             if char != ' ' and char != '\n':
                 test_sents[num].append(char)
+    rawfile.close()
     return test_sents
 
 def read_seg_pos_file(filename, simplified = True):
@@ -88,6 +89,7 @@ def write_seg_file(sents, filename):
                 print('Invalid tuple: ', end = '')
                 print(c)
         wfile.write('\n')
+    wfile.close()
 
 def write_seg_pos_file(sents, filename):
     wfile = open(filename, 'w', encoding = 'utf-8')
@@ -95,6 +97,7 @@ def write_seg_pos_file(sents, filename):
         for word in sent:
             wfile.write(word[0] + '/' + word[1] + '  ')
         wfile.write('\n')
+    wfile.close()
 
 def word2features(sent, i):
     '''
