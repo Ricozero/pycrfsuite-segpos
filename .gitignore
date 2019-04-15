@@ -1,10 +1,7 @@
 #文件夹
 __pycache__
 .vscode
+models
 
-#单个文件
-/demo.py
-
-#通配文件
-*.r
-#/models/*
+#单文件
+/src/demo.py

@@ -2,71 +2,78 @@ from itertools import chain
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelBinarizer
 import pycrfsuite
-from enum import IntEnum
 
-def read_seg_file(filename):
+def read_raw_file(filename):
+    '''
+    读取未经过分词、词性标注的测试文件
+
+    文件格式：
+        一行表示一句
+    '''
+    rawfile = open(filename, encoding = 'utf-8')
+    sents = rawfile.readlines()
+
+    test_sents = []
+    for num, sent in enumerate(sents):
+        if sent == '\n':
+            continue
+
+        test_sents.append([])
+        for char in sent:
+            if char != ' ' and char != '\n':
+                test_sents[num].append(char)
+    return test_sents
+
+def read_seg_pos_file(filename, simplified = True):
     '''
     读取已经分词、标注的语料文件
 
     文件的格式：
         一行表示一句
-        每两个词之间以两个空格分隔，
-        每个词后一个'/x'，x表示词性
-    '''
-    #train file
-    segfile = open(filename, encoding = 'utf-8')
-    #formal train file
-    formfile = open(filename + '.f', 'w+', encoding = 'utf-8')
+        每个词后一个'/x'，x表示词性，
+        然后是两个空格
 
-    sents = segfile.readlines()
-    #写成格式化临时文件
-    for sent in sents:
-        #为msr的训练集做准备
-        if sent == ' \n' or sent == '\n':
+    filename: 已分词、词性标注的语料文件名
+    simplified: 词性只取第一个字母
+    '''
+    spfile = open(filename, encoding = 'utf-8')
+    sents = spfile.readlines()
+    
+    segtrain_sents = []
+    postrain_sents = []
+
+    for num, sent in enumerate(sents):
+        if sent == '\n':
             continue
-        pre = 0 #前一个词的尾部，当前词的开始
+
+        segtrain_sents.append([])
+        postrain_sents.append([])
+
+        pre = 0 #当前词的开始
         for cur, char in enumerate(sent):
             if char == ' ' and sent[cur - 1] != ' ':
-                if pre + 1 == cur:
-                    formfile.write(sent[pre] + ' S\n')
+                w = sent[pre:cur]
+                k = w.rfind('/')
+                #分词训练集
+                if k == 1:
+                    segtrain_sents[num].append((w[0], 'S'))
                 else:
-                    formfile.write(sent[pre] + ' B\n')
-                    for i in range(pre + 1, cur - 1):
-                        formfile.write(sent[i] + ' M\n')
-                    formfile.write(sent[cur - 1] + ' E\n')
+                    segtrain_sents[num].append((w[0], 'B'))
+                    for i in range(1, k - 1):
+                        segtrain_sents[num].append((w[0], 'M'))
+                    segtrain_sents[num].append((w[k - 1], 'E'))
+                #词性标注训练集
+                if simplified:
+                    postrain_sents[num].append((w[0:k], w[k + 1]))
+                else:
+                    postrain_sents[num].append((w[0:k], w[k + 1:]))
+
                 pre = cur + 2
             else:
                 continue
-        #最后一个词，长度考虑回车；但最后一句没有回车
-        if pre + 2 == len(sent) or pre + 1 == len(sent):
-            if sent[pre] != '\n':
-                formfile.write(sent[pre] + ' S\n')
-        else:
-            formfile.write(sent[pre] + ' B\n')
-            for i in range(pre + 1, len(sent) - 2):
-                formfile.write(sent[i] + ' M\n')
-            formfile.write(sent[len(sent) - 2] + ' E\n')
-        formfile.write('\n')
+    spfile.close()
+    return segtrain_sents, postrain_sents
 
-    segfile.close()
-
-    #读取格式化训练文件
-    formfile.seek(0, 0)
-    lines = formfile.readlines()
-    train_sents = []
-    train_sents.append([])
-    i = 0
-    for line in lines:
-        if line =='\n':
-            if len(train_sents[i]) > 0:
-                train_sents.append([])
-                i += 1
-        else:
-            train_sents[i].append((line[0], line[2]))
-    formfile.close()
-    return train_sents
-
-#分词后的结果写入文件
 def write_seg_file(sents, filename):
     wfile = open(filename, 'w', encoding = 'utf-8')
     for sent in sents:
@@ -82,13 +89,12 @@ def write_seg_file(sents, filename):
                 print(c)
         wfile.write('\n')
 
-def ispunct(char):
-    punct_cn = '！？｡＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～｟｠｢｣､、〃》「」『』【】〔〕〖〗〘〙〚〛〜〝〞〟〰〾〿–—‘’‛“”„‟…‧﹏.'
-    punct_en = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-    if char in punct_cn or char in punct_en:
-        return True
-    else:
-        return False
+def write_seg_pos_file(sents, filename):
+    wfile = open(filename, 'w', encoding = 'utf-8')
+    for sent in sents:
+        for word in sent:
+            wfile.write(word[0] + '/' + word[1] + '  ')
+        wfile.write('\n')
 
 def word2features(sent, i):
     '''
@@ -151,64 +157,6 @@ def word2features(sent, i):
 
     return features
 
-def word2features0(sent, i):
-    '''
-    pku训练集+测试集
-                    precision    recall  f1-score   support
-
-                B       0.89      0.91      0.90     56883
-                E       0.89      0.91      0.90     56883
-                M       0.65      0.67      0.66     11479
-                S       0.90      0.84      0.87     47489
-
-    micro     avg       0.87      0.87      0.87    172734
-    macro     avg       0.83      0.83      0.83    172734
-    weighted  avg       0.87      0.87      0.87    172734
-    samples   avg       0.87      0.87      0.87    172734
-    '''
-    word = sent[i][0]
-    features = [
-        'bias',
-        'word=' + word,
-        'word.isdigit=%s' % word.isdigit(),
-        'word.ispunct=%s' % ispunct(word)
-    ]
-    if i > 0:
-        word = sent[i-1][0]
-        features.extend([
-            '-1:word=' + word,
-            '-1:word.isdigit=%s' % word.isdigit(),
-            '-1:word.ispunct=%s' % ispunct(word)
-        ])
-        if i > 1:
-            word = sent[i-2][0]
-            features.extend([
-                '-2:word=' + word,
-                '-2:word.isdigit=%s' % word.isdigit(),
-                '-2:word.ispunct=%s' % ispunct(word)
-            ])
-    else:
-        features.append('BOS')
-
-    if i < len(sent)-1:
-        word = sent[i+1][0]
-        features.extend([
-            '+1:word=' + word,
-            '+1:word.isdigit=%s' % word.isdigit(),
-            '+1:word.ispunct=%s' % ispunct(word)
-        ])
-        if i < len(sent)-2:
-            word = sent[i+2][0]
-            features.extend([
-                '+2:word=' + word,
-                '+2:word.isdigit=%s' % word.isdigit(),
-                '+2:word.ispunct=%s' % ispunct(word)
-            ])
-    else:
-        features.append('EOS')
-
-    return features
-
 def sent2features(sent):
     return [word2features(sent, i) for i in range(len(sent))]
 
@@ -218,7 +166,7 @@ def sent2labels(sent):
 def sent2tokens(sent):
     return [token for token, label in sent]
 
-def train(sents):
+def train(sents, filename):
     X_train = [sent2features(s) for s in sents]
     y_train = [sent2labels(s) for s in sents]
 
@@ -237,15 +185,15 @@ def train(sents):
         'feature.possible_transitions': True
     })
     #trainer.params()
-    trainer.train('trainer')
+    trainer.train(filename)
     return trainer
 
-def bmes_classification_report(y_true, y_pred):
+def my_classification_report(y_true, y_pred):
     lb = LabelBinarizer()
     y_true_combined = lb.fit_transform(list(chain.from_iterable(y_true)))
     y_pred_combined = lb.transform(list(chain.from_iterable(y_pred)))
 
-    tagset = set(lb.classes_) - {'\n'}
+    tagset = set(lb.classes_)
     tagset = sorted(tagset)
     class_indices = {cls: idx for idx, cls in enumerate(lb.classes_)}
 
@@ -263,3 +211,6 @@ def print_transitions(trans_features):
 def print_state_features(state_features):
     for (attr, label), weight in state_features:
         print("%0.6f %-6s %s" % (weight, label, attr))
+
+if __name__ == '__main__':
+    pass
