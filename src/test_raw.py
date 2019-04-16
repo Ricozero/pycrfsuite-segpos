@@ -35,7 +35,10 @@ for num, sent in enumerate(segtest_sents):
 
 #词性标注预测
 X_test = [segpos.sent2features(s) for s in postest_sents]
-y_pred = [pos_tagger.tag(xseq) for xseq in X_test]
+#改用自己的viterbi算法预测
+#y_pred = [pos_tagger.tag(xseq) for xseq in X_test]
+y_pred = segpos.viterbi_pred(pos_tagger.info(), X_test)
+#将预测结果加入句子列表
 for num, sent in enumerate(postest_sents):
     for i, word in enumerate(sent):
         word.append(y_pred[num][i])

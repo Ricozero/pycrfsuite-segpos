@@ -28,7 +28,9 @@ print(segpos.my_classification_report(y_test, y_pred))
 #所以说，分词和词性标注是分割开来的
 X_test = [segpos.sent2features(s) for s in postest_sents]
 y_test = [segpos.sent2labels(s) for s in postest_sents]
-y_pred = [pos_tagger.tag(xseq) for xseq in X_test]
+#改用自己的viterbi算法预测
+#y_pred = [pos_tagger.tag(xseq) for xseq in X_test]
+y_pred = segpos.viterbi_pred(pos_tagger.info(), X_test)
 
 for num, sent in enumerate(postest_sents):
     for i, word in enumerate(sent):

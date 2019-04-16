@@ -2,6 +2,7 @@ from itertools import chain
 from sklearn.metrics import classification_report
 from sklearn.preprocessing import LabelBinarizer
 import pycrfsuite
+import numpy as np
 
 def read_raw_file(filename):
     '''
@@ -214,6 +215,72 @@ def print_transitions(trans_features):
 def print_state_features(state_features):
     for (attr, label), weight in state_features:
         print("%0.6f %-6s %s" % (weight, label, attr))
+
+def viterbi_pred(info, X_test):
+    lbdict = info.labels    #标签字典：通过词性查序号
+    lblist = []             #标签列表：通过序号查标签
+    for lb in lbdict:
+        lblist.append(lb)
+
+    tw = info.transitions       #transition weight
+    sw = info.state_features    #state weight
+
+    y_pred = []
+    for sent_feat in X_test:
+        VW = np.zeros((len(sent_feat), len(lbdict)))
+        for i, word_feat in enumerate(sent_feat):
+            for feat in word_feat:
+                for lb in lbdict:
+                    VW[i][int(lbdict[lb])] += sw.get((feat, lb), 0)
+        EW = np.zeros((len(sent_feat), len(lbdict), len(lbdict)))
+        for lb1 in lbdict:
+            for lb2 in lbdict:
+                for i in range(len(sent_feat)):
+                    EW[i][int(lbdict[lb1])][int(lbdict[lb2])] = tw.get((lb1, lb2), 0)
+        V = np.full(np.shape(VW), 1)
+        E = np.full(np.shape(EW), 1)
+        BP = viterbi(V, VW, E, EW)
+        pos_list = []
+        for i in BP:
+            pos_list.append(lblist[int(i)])
+        y_pred.append(pos_list)
+    return y_pred
+
+def viterbi(V, VW, E, EW):
+    '''
+    :param V:是定义在节点上的特征函数，称为状态特征
+    :param VW:是V对应的权值，维度表示：序列，标签
+    :param E:是定义在边上的特征函数，称为转移特征
+    :param EW:是E对应的权值，维度表示：序列，标签1，标签2
+    '''
+    D = np.full(shape=(np.shape(V)), fill_value=.0)
+    P = np.full(shape=(np.shape(V)), fill_value=.0)
+    for i in range(np.shape(V)[0]):
+        #初始化
+        if 0 == i:
+            D[i] = np.multiply(V[i], VW[i])
+            P[i] = np.zeros(np.shape(V)[1])
+        #递推求解布局最优状态路径
+        else:
+            for y in range(np.shape(V)[1]): #delta[i][y=1,2...]
+                for l in range(np.shape(V)[1]): #V[i-1][l=1,2...]
+                    #前导状态的最优状态路径的概率 +前导状态到当前状体的转移概率 + 当前状态的概率
+                    delta = D[i - 1, l] + \
+                        E[i - 1][l, y] * EW[i - 1][l, y] + \
+                        V[i, y] * VW[i, y]
+                    if 0 == l or delta > D[i, y]:
+                        D[i, y], P[i, y] = delta, l
+    #返回，得到所有的最优前导状态
+    N = np.shape(V)[0]
+    BP = np.full(shape=(N,), fill_value=0.0)
+    t_range = -1 * np.array(sorted(-1 * np.arange(N)))
+    for t in t_range:
+        if N - 1 == t:#得到最优状态
+            BP[t] = np.argmax(D[-1])
+        else: #得到最优前导状态
+            BP[t] = P[t + 1, int(BP[t + 1])]
+
+    return BP
 
 if __name__ == '__main__':
     pass
