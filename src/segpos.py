@@ -31,7 +31,7 @@ def read_seg_pos_file(filename, simplified = True):
 
     文件的格式：
         一行表示一句
-        每个词后一个'/x'，x表示词性，
+        每个词后一个'/x'，x表示词性（小写字母），
         然后是两个空格
 
     filename: 已分词、词性标注的语料文件名
@@ -65,9 +65,9 @@ def read_seg_pos_file(filename, simplified = True):
                     segtrain_sents[num].append((w[k - 1], 'E'))
                 #词性标注训练集
                 if simplified:
-                    postrain_sents[num].append((w[0:k], w[k + 1]))
+                    postrain_sents[num].append((w[0:k], w[k + 1].lower()))
                 else:
-                    postrain_sents[num].append((w[0:k], w[k + 1:]))
+                    postrain_sents[num].append((w[0:k], w[k + 1:].lower()))
 
                 pre = cur + 2
             else:
