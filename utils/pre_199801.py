@@ -8,3 +8,6 @@ for l in lines:
     fout.write(l[23:])
 fin.close()
 fout.close()
+
+#后来发现有10处是单个空格分隔，已修改为双空格
+#另外有9处三空格，也已修改为双空格

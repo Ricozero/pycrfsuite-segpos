@@ -173,7 +173,7 @@ def train(sents, filename):
     X_train = [sent2features(s) for s in sents]
     y_train = [sent2labels(s) for s in sents]
 
-    trainer = pycrfsuite.Trainer(verbose=False)
+    trainer = pycrfsuite.Trainer()  #verbose默认开启
 
     #zip函数可以使得X和y的每一个元素按顺序组成元组
     for xseq, yseq in zip(X_train, y_train):

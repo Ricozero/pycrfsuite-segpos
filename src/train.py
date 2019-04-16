@@ -42,8 +42,8 @@ if do_train_seg:
     start = time.process_time()
     trainer = segpos.train(segtrain_sents, segmodel)
     end = time.process_time()
-    print('用时' + str(end - start) + 's')
-'''
+    print('总用时' + str(end - start) + 's', end = '\n\n')
+
 tagger = pycrfsuite.Tagger()
 tagger.open(segmodel)
 
@@ -57,7 +57,7 @@ segpos.print_state_features(Counter(info.state_features).most_common(20))
 print("\nTop negative:")
 segpos.print_state_features(Counter(info.state_features).most_common()[-20:])
 print('\n')
-'''
+
 ##### 词性标注模型 #####
 if os.path.exists(posmodel):
     while 1:
@@ -76,12 +76,11 @@ if do_train_pos:
     start = time.process_time()
     trainer = segpos.train(postrain_sents, posmodel)
     end = time.process_time()
-    print('用时' + str(end - start) + 's')
-'''
+    print('总用时' + str(end - start) + 's', end = '\n\n')
+
 tagger = pycrfsuite.Tagger()
 tagger.open(posmodel)
 
-#会出错，原因未知
 info = tagger.info()
 print("Top likely transitions:")
 segpos.print_transitions(Counter(info.transitions).most_common(15))
@@ -91,4 +90,3 @@ print("Top positive:")
 segpos.print_state_features(Counter(info.state_features).most_common(20))
 print("\nTop negative:")
 segpos.print_state_features(Counter(info.state_features).most_common()[-20:])
-'''
