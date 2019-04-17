@@ -16,7 +16,7 @@ def preprocess_xml_corpus(filenames, fout):
                 pos = wnode.xpath('@pos')[0][0] #只取第一个字母
                 #修正abs论西部大开发中的教育优先发展.xml中的问题
                 #为什么会把'1 '标注成ws?
-                #已通过.strip解决
+                #已通过strip函数解决
                 fout.write(word + '/' + pos + '  ')
             fout.write('\n')
         xfile.close()
@@ -31,4 +31,7 @@ filenames = [folder + r'\1\应用文\abs讣 告.xml',
     folder + r'\1\议论文\abs正义.xml',
     folder + r'\1\议论文\abs左派和右派.xml']
 
-preprocess_xml_corpus(filenames, 'test_eva/hit-cir.txt')
+#preprocess_xml_corpus(filenames, 'test_eva/hit-cir.txt')
+
+filenames = [folder + r'\1\说明文\abs21世纪的早晨穿出蛋白丝之感受.xml']
+preprocess_xml_corpus(filenames, 'test_eva/unreg.txt')
