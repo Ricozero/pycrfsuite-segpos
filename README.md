@@ -4,6 +4,20 @@
 分词部分改写自第一次作业：[pycrfsuite-segword](https://github.com/Ricozero/pycrfsuite-segword)  
 segpos = word segmentation + Part of Speech tagging
 
+实验环境：
+
+- Windows 10
+- Python 3.7
+
+使用的Python包：
+
+- collections
+- scikit-learn
+- pycrfsuite
+- numpy
+- collections
+- lxml
+
 ---
 
 ## 训练阶段
