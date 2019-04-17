@@ -98,33 +98,6 @@ def write_seg_pos_file(sents, filename):
     wfile.close()
 
 def word2features(sent, i):
-    '''
-    pku训练集+测试集
-                    precision    recall  f1-score   support
-
-                B       0.94      0.96      0.95     56883
-                E       0.94      0.96      0.95     56883
-                M       0.84      0.78      0.81     11479
-                S       0.95      0.92      0.93     47489
-
-    micro avg           0.94      0.94      0.94    172734
-    macro avg           0.92      0.91      0.91    172734
-    weighted avg        0.94      0.94      0.94    172734
-    samples avg         0.94      0.94      0.94    172734
-
-    pku训练集+测试集（无-1,-2,+1,+2）
-                    precision    recall  f1-score   support
-
-                B       0.93      0.96      0.94     56883
-                E       0.93      0.96      0.95     56883
-                M       0.84      0.78      0.81     11479
-                S       0.95      0.91      0.93     47489
-
-    micro     avg       0.93      0.93      0.93    172734
-    macro     avg       0.91      0.90      0.91    172734
-    weighted  avg       0.93      0.93      0.93    172734
-    samples   avg       0.93      0.93      0.93    172734
-    '''
     word = sent[i][0]
     features = [
         'bias',
@@ -246,8 +219,8 @@ def viterbi(VW, EW):
     :param VW:是节点（状态特征）对应的权值，维度表示：序列，标签
     :param EW:是边（转移特征）对应的权值，维度表示：序列，标签1，标签2
     '''
-    D = np.full(shape=(np.shape(VW)), fill_value=.0)
-    P = np.full(shape=(np.shape(VW)), fill_value=.0)
+    D = np.full(shape=(np.shape(VW)), fill_value=.0)    #delta
+    P = np.full(shape=(np.shape(VW)), fill_value=.0)    #psi
     for i in range(np.shape(VW)[0]):
         #初始化
         if 0 == i:
