@@ -16,9 +16,6 @@ def read_raw_file(filename):
 
     test_sents = []
     for num, sent in enumerate(sents):
-        if sent == '\n':
-            continue
-
         test_sents.append([])
         for char in sent:
             if char != ' ' and char != '\n':
@@ -222,8 +219,8 @@ def viterbi_pred(info, X_test):
     for lb in lbdict:
         lblist.append(lb)
 
-    tw = info.transitions       #transition weight
-    sw = info.state_features    #state weight
+    tw = info.transitions       #transition weight dictionary
+    sw = info.state_features    #state weight ditionary
 
     y_pred = []
     for sent_feat in X_test:
